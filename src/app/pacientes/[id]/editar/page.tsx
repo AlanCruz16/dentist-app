@@ -23,9 +23,10 @@ interface PatientDetail {
     // created_at and updated_at might also be fetched if needed by the form/page
 }
 
-export default async function EditPatientPage({ params }: EditPatientPageProps) {
+export default async function EditPatientPage(props: EditPatientPageProps) { // Changed to take full props
+    const params = await props.params; // Await props.params
+    const patientId = params.id;        // Then access .id
     const supabase = await createSupabaseServerClient();
-    const patientId = params.id;
 
     const { data: patient, error } = await supabase
         .from('patients')

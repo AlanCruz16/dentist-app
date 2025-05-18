@@ -26,9 +26,10 @@ interface PatientDetail {
     updated_at: string;
 }
 
-export default async function PatientDetailsPage({ params }: PatientDetailsPageProps) {
+export default async function PatientDetailsPage(props: PatientDetailsPageProps) { // Changed to take full props
+    const params = await props.params; // Await props.params as per error message implication
+    const patientId = params.id;        // Then access .id
     const supabase = await createSupabaseServerClient();
-    const patientId = params.id;
 
     const { data: patient, error } = await supabase
         .from('patients')
