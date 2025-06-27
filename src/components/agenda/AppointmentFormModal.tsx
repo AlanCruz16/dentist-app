@@ -1,0 +1,232 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { createClient } from '@/lib/supabase/client'; // Ensure this client is imported for patient search
+import { createAppointment } from '@/app/agenda/actions'; // Import the server action
+
+interface Patient {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    // Add other relevant patient fields if needed for display or search
+}
+
+interface AppointmentFormModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    selectedDate: Date | null; // Date object for the selected day
+    selectedTime: string | null; // e.g., "09:00"
+    onAppointmentCreated: () => void; // Callback to refresh agenda
+    currentDoctorId: string | null;
+    currentDoctorName: string | null;
+}
+
+export default function AppointmentFormModal({
+    isOpen,
+    onClose,
+    selectedDate,
+    selectedTime,
+    onAppointmentCreated,
+    currentDoctorId,
+    currentDoctorName,
+}: AppointmentFormModalProps) {
+    const [patientId, setPatientId] = useState('');
+    const [serviceDescription, setServiceDescription] = useState('');
+    const [notes, setNotes] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [patients, setPatients] = useState<Patient[]>([]);
+    const [selectedPatientName, setSelectedPatientName] = useState('');
+
+    // const supabase = createClient(); // Not needed directly for patient search if we make it a server component or use a route handler
+
+    useEffect(() => {
+        if (!isOpen) {
+            // Reset form fields when modal closes
+            setPatientId('');
+            setServiceDescription('');
+            setNotes('');
+            setSearchTerm('');
+            setSelectedPatientName('');
+            setPatients([]);
+            setIsLoading(false);
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        // For patient search, we still need a client-side Supabase instance
+        // or we'd need to create a separate server action/route handler for patient search.
+        // For simplicity in this step, let's keep client-side search.
+        // If this becomes an issue or for more robust search, a dedicated endpoint is better.
+        if (searchTerm.length > 2) {
+            const supabaseClient = createClient(); // Local instance for search
+            const fetchPatients = async () => {
+                const { data, error } = await supabaseClient
+                    .from('patients')
+                    .select('id, first_name, last_name')
+                    .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`)
+                    .limit(10);
+                if (error) {
+                    console.error('Error fetching patients:', error);
+                    setPatients([]);
+                } else {
+                    setPatients(data || []);
+                }
+            };
+            fetchPatients();
+        } else {
+            setPatients([]);
+        }
+    }, [searchTerm]); // Removed supabase from dependencies as it's created locally
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedDate || !selectedTime || !patientId) {
+            alert('Por favor, complete todos los campos requeridos.');
+            return;
+        }
+        setIsLoading(true);
+
+        const [hours, minutes] = selectedTime.split(':').map(Number);
+        const startTime = new Date(selectedDate);
+        startTime.setHours(hours, minutes, 0, 0);
+
+        const endTime = new Date(startTime);
+        endTime.setHours(startTime.getHours() + 1); // Default 1-hour duration
+
+        if (!currentDoctorId) {
+            alert('Error: No se pudo identificar al doctor. Por favor, inicie sesión nuevamente.');
+            setIsLoading(false);
+            return;
+        }
+
+        const appointmentData = {
+            patient_id: patientId,
+            doctor_id: currentDoctorId,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            service_description: serviceDescription,
+            notes: notes,
+        };
+
+        const result = await createAppointment(appointmentData);
+
+        setIsLoading(false);
+        if (result.error) {
+            console.error('Error creating appointment:', result.error);
+            alert(`Error al crear la cita: ${result.error.message}`);
+        } else {
+            alert('Cita creada exitosamente!');
+            onAppointmentCreated(); // This will trigger re-fetch in AgendaPage due to revalidatePath
+            onClose();
+        }
+    };
+
+    const handlePatientSelect = (patient: Patient) => {
+        setPatientId(patient.id);
+        setSelectedPatientName(`${patient.first_name || ''} ${patient.last_name || ''}`);
+        setSearchTerm(`${patient.first_name || ''} ${patient.last_name || ''}`);
+        setPatients([]); // Clear search results
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[480px]">
+                <DialogHeader>
+                    <DialogTitle>
+                        Agendar Nueva Cita
+                        {currentDoctorName && (
+                            <span className="block text-xs font-normal text-gray-400 mt-1">Doctor: {currentDoctorName}</span>
+                        )}
+                        {selectedDate && selectedTime && (
+                            <span className="block text-sm font-normal text-gray-500 mt-1">
+                                Para el {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} a las {selectedTime}
+                            </span>
+                        )}
+                    </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <Label htmlFor="patient-search">Buscar Paciente</Label>
+                        <Input
+                            id="patient-search"
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                if (patientId && e.target.value !== selectedPatientName) {
+                                    setPatientId(''); // Clear selected patient if search term changes
+                                    setSelectedPatientName('');
+                                }
+                            }}
+                            placeholder="Escriba para buscar..."
+                            disabled={!!patientId && searchTerm === selectedPatientName}
+                        />
+                        {patientId && searchTerm === selectedPatientName && (
+                            <Button variant="link" size="sm" onClick={() => { setPatientId(''); setSearchTerm(''); setSelectedPatientName(''); }} className="p-0 h-auto">Limpiar selección</Button>
+                        )}
+                        {patients.length > 0 && (
+                            <ul className="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white">
+                                {patients.map((p) => (
+                                    <li
+                                        key={p.id}
+                                        onClick={() => handlePatientSelect(p)}
+                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                    >
+                                        {p.first_name} {p.last_name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+
+                    <div>
+                        <Label htmlFor="service">Servicio/Motivo</Label>
+                        <Input
+                            id="service"
+                            value={serviceDescription}
+                            onChange={(e) => setServiceDescription(e.target.value)}
+                            placeholder="Ej: Consulta de ortodoncia"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="notes">Notas Adicionales</Label>
+                        <Textarea
+                            id="notes"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Notas opcionales sobre la cita..."
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline" onClick={onClose}>
+                                Cancelar
+                            </Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isLoading || !patientId}>
+                            {isLoading ? 'Agendando...' : 'Agendar Cita'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}

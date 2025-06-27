@@ -17,8 +17,8 @@ const Sidebar = () => {
                         </Link>
                     </li>
                     <li>
-                        <Link href="/calendario" className="block py-2 px-3 hover:bg-gray-700 rounded">
-                            Calendario
+                        <Link href="/agenda" className="block py-2 px-3 hover:bg-gray-700 rounded">
+                            Agenda
                         </Link>
                     </li>
                     <li>
