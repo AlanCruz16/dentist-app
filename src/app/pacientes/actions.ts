@@ -15,6 +15,72 @@ export interface PatientFormData {
     orthodontic_stage_notes?: string | null;
 }
 
+export interface PaymentFormData {
+    patient_id: string;
+    amount_paid: number;
+    payment_date: string;
+    payment_method: 'cash' | 'card' | 'transfer' | 'insurance';
+    service_description?: string | null;
+    notes?: string | null;
+}
+
+export async function addPayment(formData: PaymentFormData) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value, ...options });
+                    } catch (error) {
+                        // The `set` method was called from a Server Component.
+                    }
+                },
+                remove(name: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value: '', ...options });
+                    } catch (error) {
+                        // The `delete` method was called from a Server Component.
+                    }
+                },
+            },
+        }
+    );
+
+    if (!formData.patient_id || !formData.amount_paid || !formData.payment_date || !formData.payment_method) {
+        return { error: { message: 'Todos los campos obligatorios deben ser completados.' } };
+    }
+
+    const paymentDataToInsert = {
+        patient_id: formData.patient_id,
+        amount_paid: formData.amount_paid,
+        payment_date: formData.payment_date,
+        payment_method: formData.payment_method,
+        service_description: formData.service_description || null,
+        notes: formData.notes || null,
+    };
+
+    const { data, error } = await supabase
+        .from('payments')
+        .insert([paymentDataToInsert])
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Supabase error inserting payment:', error);
+        return { error: { message: `Error de base de datos: ${error.message}` } };
+    }
+
+    revalidatePath(`/pacientes/${formData.patient_id}`);
+
+    return { data, error: null };
+}
+
 export async function addPatient(formData: PatientFormData) {
     const cookieStore = await cookies(); // Await cookies()
     const supabase = createServerClient(

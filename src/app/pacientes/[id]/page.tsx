@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit } from 'lucide-react'; // Removed Trash2, it's in DeletePatientButton
-import DeletePatientButton from '@/components/pacientes/DeletePatientButton'; // Import the new component
+import { ArrowLeft, Edit } from 'lucide-react';
+import DeletePatientButton from '@/components/pacientes/DeletePatientButton';
+import { PaymentForm } from '@/components/pacientes/PaymentForm';
+import { PaymentsList } from '@/components/pacientes/PaymentsList';
 
 interface PatientDetailsPageProps {
     params: {
@@ -24,23 +26,41 @@ interface PatientDetail {
     orthodontic_stage_notes: string | null;
     created_at: string;
     updated_at: string;
+    payments: {
+        id: string;
+        payment_date: string;
+        amount_paid: number;
+        payment_method: 'cash' | 'card' | 'transfer' | 'insurance';
+        service_description: string | null;
+        notes: string | null;
+    }[];
 }
 
-export default async function PatientDetailsPage(props: PatientDetailsPageProps) { // Changed to take full props
-    const params = await props.params; // Await props.params as per error message implication
-    const patientId = params.id;        // Then access .id
+export default async function PatientDetailsPage(props: PatientDetailsPageProps) {
+    const params = await props.params;
+    const patientId = params.id;
     const supabase = await createSupabaseServerClient();
 
     const { data: patient, error } = await supabase
         .from('patients')
-        .select('*') // Select all columns for details view
+        .select(`
+            *,
+            payments (
+                id,
+                payment_date,
+                amount_paid,
+                payment_method,
+                service_description,
+                notes
+            )
+        `)
         .eq('id', patientId)
-        .is('deleted_at', null) // Ensure patient is not soft-deleted
-        .single(); // Expect a single record
+        .is('deleted_at', null)
+        .single();
 
     if (error || !patient) {
         console.error('Error fetching patient details or patient not found:', error);
-        notFound(); // Triggers the not-found page
+        notFound();
     }
 
     const typedPatient = patient as PatientDetail; // Type assertion
@@ -71,7 +91,8 @@ export default async function PatientDetailsPage(props: PatientDetailsPageProps)
                         </CardTitle>
                         <CardDescription>Detalles del Paciente</CardDescription>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex items-center space-x-2">
+                        <PaymentForm patientId={typedPatient.id} />
                         <Link href={`/pacientes/${typedPatient.id}/editar`} passHref>
                             <Button variant="outline" size="sm">
                                 <Edit className="mr-2 h-4 w-4" /> Editar
@@ -83,22 +104,24 @@ export default async function PatientDetailsPage(props: PatientDetailsPageProps)
                         />
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div><strong>Nombre Completo:</strong> {typedPatient.first_name} {typedPatient.last_name}</div>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div><strong>Nombre:</strong> {typedPatient.first_name} {typedPatient.last_name}</div>
                         <div><strong>Fecha de Nacimiento:</strong> {formatDate(typedPatient.date_of_birth)}</div>
                         <div><strong>Teléfono:</strong> {typedPatient.phone_number || 'No especificado'}</div>
                         <div><strong>Email:</strong> {typedPatient.email || 'No especificado'}</div>
-                        <div className="md:col-span-2"><strong>Dirección:</strong> {typedPatient.address || 'No especificada'}</div>
+                        <div className="md:col-span-3"><strong>Dirección:</strong> {typedPatient.address || 'No especificada'}</div>
                     </div>
-                    <div className="pt-4">
-                        <h4 className="font-semibold mb-1">Notas / Etapa del Tratamiento (Ortodoncia):</h4>
+                    <div className="pt-2">
+                        <h4 className="font-semibold mb-1">Notas / Etapa del Tratamiento:</h4>
                         <p className="text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
                             {typedPatient.orthodontic_stage_notes || 'Sin notas.'}
                         </p>
                     </div>
                     <hr />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500">
+                    <PaymentsList payments={typedPatient.payments || []} />
+                    <hr />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500 pt-2">
                         <div><strong>ID Paciente:</strong> {typedPatient.id}</div>
                         <div><strong>Registrado el:</strong> {formatDate(typedPatient.created_at)}</div>
                         <div><strong>Última Actualización:</strong> {formatDate(typedPatient.updated_at)}</div>
