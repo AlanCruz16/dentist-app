@@ -145,21 +145,21 @@ export default function AppointmentFormModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[480px]">
+            <DialogContent className="sm:max-w-[480px] bg-card text-card-foreground">
                 <DialogHeader>
                     <DialogTitle>
                         Agendar Nueva Cita
                         {currentDoctorName && (
-                            <span className="block text-xs font-normal text-gray-400 mt-1">Doctor: {currentDoctorName}</span>
+                            <span className="block text-xs font-normal text-muted-foreground mt-1">Doctor: {currentDoctorName}</span>
                         )}
                         {selectedDate && selectedTime && (
-                            <span className="block text-sm font-normal text-gray-500 mt-1">
+                            <span className="block text-sm font-normal text-muted-foreground mt-1">
                                 Para el {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} a las {selectedTime}
                             </span>
                         )}
                     </DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <Label htmlFor="patient-search">Buscar Paciente</Label>
                         <Input
@@ -175,17 +175,18 @@ export default function AppointmentFormModal({
                             }}
                             placeholder="Escriba para buscar..."
                             disabled={!!patientId && searchTerm === selectedPatientName}
+                            className="bg-input text-foreground"
                         />
                         {patientId && searchTerm === selectedPatientName && (
-                            <Button variant="link" size="sm" onClick={() => { setPatientId(''); setSearchTerm(''); setSelectedPatientName(''); }} className="p-0 h-auto">Limpiar selección</Button>
+                            <Button variant="link" size="sm" onClick={() => { setPatientId(''); setSearchTerm(''); setSelectedPatientName(''); }} className="p-0 h-auto text-primary">Limpiar selección</Button>
                         )}
                         {patients.length > 0 && (
-                            <ul className="border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto bg-white">
+                            <ul className="border border-border rounded-md mt-2 max-h-40 overflow-y-auto bg-card">
                                 {patients.map((p) => (
                                     <li
                                         key={p.id}
                                         onClick={() => handlePatientSelect(p)}
-                                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                                        className="p-3 hover:bg-accent cursor-pointer"
                                     >
                                         {p.first_name} {p.last_name}
                                     </li>
@@ -202,6 +203,7 @@ export default function AppointmentFormModal({
                             onChange={(e) => setServiceDescription(e.target.value)}
                             placeholder="Ej: Consulta de ortodoncia"
                             required
+                            className="bg-input text-foreground"
                         />
                     </div>
 
@@ -212,6 +214,7 @@ export default function AppointmentFormModal({
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Notas opcionales sobre la cita..."
+                            className="bg-input text-foreground"
                         />
                     </div>
 

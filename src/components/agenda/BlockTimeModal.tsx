@@ -109,16 +109,16 @@ export default function BlockTimeModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md bg-card text-card-foreground">
                 <DialogHeader>
                     <DialogTitle>Bloquear Tiempo en Agenda</DialogTitle>
                     {currentDoctorName && (
                         <p className="text-sm text-muted-foreground">
-                            Para: Dr. {currentDoctorName} (ID: {currentDoctorId})
+                            Para: Dr. {currentDoctorName}
                         </p>
                     )}
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="start-date">Fecha Inicio</Label>
@@ -128,6 +128,7 @@ export default function BlockTimeModal({
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                                 required
+                                className="bg-input text-foreground"
                             />
                         </div>
                         <div>
@@ -138,6 +139,7 @@ export default function BlockTimeModal({
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
                                 required
+                                className="bg-input text-foreground"
                             />
                         </div>
                     </div>
@@ -150,6 +152,7 @@ export default function BlockTimeModal({
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                                 required
+                                className="bg-input text-foreground"
                             />
                         </div>
                         <div>
@@ -160,6 +163,7 @@ export default function BlockTimeModal({
                                 value={endTime}
                                 onChange={(e) => setEndTime(e.target.value)}
                                 required
+                                className="bg-input text-foreground"
                             />
                         </div>
                     </div>
@@ -170,6 +174,7 @@ export default function BlockTimeModal({
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="Ej: Vacaciones, Conferencia, etc."
+                            className="bg-input text-foreground"
                         />
                     </div>
                     <DialogFooter>

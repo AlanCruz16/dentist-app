@@ -204,32 +204,32 @@ export default function AgendaPage() {
 
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-semibold mb-6 text-center">Agenda Semanal</h1>
+        <div className="container mx-auto p-6 bg-background">
+            <h1 className="text-3xl font-bold mb-8">Agenda</h1>
 
-            <div className="mb-4 flex justify-between items-center">
+            <div className="mb-6 flex justify-between items-center">
                 <Button onClick={handlePreviousWeek} variant="outline">
                     {'< Semana Anterior'}
                 </Button>
-                <h2 className="text-xl font-medium">{formatWeekDisplay(currentDate)}</h2>
+                <h2 className="text-xl font-semibold">{formatWeekDisplay(currentDate)}</h2>
                 <Button onClick={handleNextWeek} variant="outline">
                     {'Semana Siguiente >'}
                 </Button>
             </div>
 
-            <div className="mb-4 text-right">
+            <div className="mb-6 text-right">
                 <Button onClick={handleOpenBlockTimeModal}>Bloquear Horario</Button>
             </div>
 
             {isLoading ? (
-                <div className="text-center py-10">Cargando agenda...</div>
+                <div className="text-center py-12">Cargando agenda...</div>
             ) : (
-                <div className="grid grid-cols-8 border border-gray-300 bg-white">
-                    <div className="p-2 border-r border-b border-gray-300 font-medium bg-gray-50 text-center sticky top-0 z-10">Hora</div>
+                <div className="grid grid-cols-8 border border-border bg-card rounded-lg shadow-sm">
+                    <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10">Hora</div>
                     {daysOfWeek.map((day) => (
                         <div
                             key={day}
-                            className="p-2 border-r border-b border-gray-300 font-medium bg-gray-50 text-center sticky top-0 z-10"
+                            className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10"
                         >
                             {day}
                         </div>
@@ -237,7 +237,7 @@ export default function AgendaPage() {
 
                     {timeSlots.map((time) => (
                         <React.Fragment key={time}>
-                            <div className="p-2 border-r border-b border-gray-300 font-medium bg-gray-50 text-center h-28 flex items-center justify-center">
+                            <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center h-32 flex items-center justify-center">
                                 {time}
                             </div>
                             {daysOfWeek.map((day, dayIndex) => {
@@ -247,7 +247,7 @@ export default function AgendaPage() {
                                 return (
                                     <div
                                         key={`${day}-${time}`}
-                                        className={`p-1 border-r border-b border-gray-300 h-28 overflow-y-auto text-xs ${isBlocked ? 'bg-red-100 cursor-not-allowed' : 'hover:bg-blue-50 cursor-pointer'
+                                        className={`p-2 border-r border-b border-border h-32 overflow-y-auto text-sm ${isBlocked ? 'bg-destructive/20 cursor-not-allowed' : 'hover:bg-accent cursor-pointer'
                                             }`}
                                         onClick={() => {
                                             if (!isBlocked && slotEvents.filter(e => e.type === 'appointment').length === 0) {
@@ -258,17 +258,16 @@ export default function AgendaPage() {
                                         {slotEvents.map(event => {
                                             if (event.type === 'appointment') {
                                                 return (
-                                                    <div key={event.id} className="bg-blue-100 p-1 rounded mb-1 shadow-sm">
-                                                        <p className="font-semibold">{event.patient?.first_name} {event.patient?.last_name}</p>
-                                                        <p>{event.service_description || 'Cita'}</p>
+                                                    <div key={event.id} className="bg-primary/20 p-2 rounded-lg mb-1 shadow-sm">
+                                                        <p className="font-semibold text-primary-foreground">{event.patient?.first_name} {event.patient?.last_name}</p>
+                                                        <p className="text-primary-foreground/80">{event.service_description || 'Cita'}</p>
                                                     </div>
                                                 );
                                             } else if (event.type === 'blocked') {
                                                 return (
-                                                    <div key={event.id} className="bg-red-200 p-1 rounded mb-1 shadow-sm text-center">
-                                                        <p className="font-semibold">BLOQUEADO</p>
-                                                        {event.reason && <p className="text-xs">{event.reason}</p>}
-                                                        {/* {event.doctor?.full_name && <p className="text-xs text-gray-600">Dr. {event.doctor.full_name}</p>} */}
+                                                    <div key={event.id} className="bg-destructive/80 p-2 rounded-lg mb-1 shadow-sm text-center">
+                                                        <p className="font-semibold text-destructive-foreground">BLOQUEADO</p>
+                                                        {event.reason && <p className="text-xs text-destructive-foreground/80">{event.reason}</p>}
                                                     </div>
                                                 );
                                             }
@@ -281,7 +280,7 @@ export default function AgendaPage() {
                     ))}
                 </div>
             )}
-            <p className="mt-4 text-sm text-gray-600">
+            <p className="mt-6 text-sm text-muted-foreground">
                 Haga clic en un espacio vacío para agendar una nueva cita o use el botón para bloquear un horario.
             </p>
 
