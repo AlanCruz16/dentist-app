@@ -30,20 +30,24 @@ export default function BlockTimeModal({
     currentDoctorId,
     currentDoctorName,
 }: BlockTimeModalProps) {
-    const [startDate, setStartDate] = useState(''); // YYYY-MM-DD
-    const [startTime, setStartTime] = useState(''); // HH:MM
-    const [endDate, setEndDate] = useState('');   // YYYY-MM-DD
-    const [endTime, setEndTime] = useState('');     // HH:MM
+    const getFormattedDate = (date: Date) => date.toISOString().split('T')[0];
+    const getFormattedTime = (date: Date) => `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+    const [startDate, setStartDate] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [reason, setReason] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (!isOpen) {
-            // Reset form fields when modal closes
-            setStartDate('');
-            setStartTime('');
-            setEndDate('');
-            setEndTime('');
+        if (isOpen) {
+            const now = new Date();
+            const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+            setStartDate(getFormattedDate(now));
+            setStartTime(getFormattedTime(now));
+            setEndDate(getFormattedDate(now));
+            setEndTime(getFormattedTime(oneHourLater));
             setReason('');
             setIsLoading(false);
         }
@@ -58,8 +62,13 @@ export default function BlockTimeModal({
         setIsLoading(true);
 
         try {
-            const startDateTime = new Date(`${startDate}T${startTime}:00`);
-            const endDateTime = new Date(`${endDate}T${endTime}:00`);
+            const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startDateTime = new Date(startYear, startMonth - 1, startDay, startHour, startMinute);
+
+            const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            const endDateTime = new Date(endYear, endMonth - 1, endDay, endHour, endMinute);
 
             if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
                 alert('Formato de fecha u hora inválido.');
