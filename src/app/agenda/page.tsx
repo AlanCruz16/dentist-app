@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAppointmentsForWeek, createClient } from '@/lib/supabase/client';
 import AppointmentFormModal from '@/components/agenda/AppointmentFormModal';
-import BlockTimeModal from '@/components/agenda/BlockTimeModal'; // Import BlockTimeModal
-import { Button } from '@/components/ui/button'; // Import Button for the new modal trigger
+import BlockTimeModal from '@/components/agenda/BlockTimeModal';
+import AppointmentDetailModal from '@/components/agenda/AppointmentDetailModal';
+import { Button } from '@/components/ui/button';
 
 // Define an interface for the appointment data, including nested patient and doctor
 interface Appointment {
@@ -53,8 +54,10 @@ export default function AgendaPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false); // Renamed for clarity
-    const [isBlockTimeModalOpen, setIsBlockTimeModalOpen] = useState(false); // State for BlockTimeModal
+    const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [isBlockTimeModalOpen, setIsBlockTimeModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
     const [selectedSlotTime, setSelectedSlotTime] = useState<string | null>(null);
     const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
@@ -160,6 +163,16 @@ export default function AgendaPage() {
         setIsBlockTimeModalOpen(false);
     };
 
+    const handleOpenDetailModal = (appointment: Appointment) => {
+        setSelectedAppointment(appointment);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleCloseDetailModal = () => {
+        setIsDetailModalOpen(false);
+        setSelectedAppointment(null);
+    };
+
     const handleEventCreated = () => { // Generic handler for both appointment and blocked time creation
         handleCloseAppointmentModal();
         handleCloseBlockTimeModal();
@@ -258,7 +271,7 @@ export default function AgendaPage() {
                                         {slotEvents.map(event => {
                                             if (event.type === 'appointment') {
                                                 return (
-                                                    <div key={event.id} className="bg-primary/20 p-2 rounded-lg mb-1 shadow-sm">
+                                                    <div key={event.id} className="bg-primary/40 p-2 rounded-lg mb-1 shadow-sm cursor-pointer" onClick={() => handleOpenDetailModal(event)}>
                                                         <p className="font-semibold text-primary-foreground">{event.patient?.first_name} {event.patient?.last_name}</p>
                                                         <p className="text-primary-foreground/80">{event.service_description || 'Cita'}</p>
                                                     </div>
@@ -300,6 +313,12 @@ export default function AgendaPage() {
                 onTimeBlocked={handleEventCreated}
                 currentDoctorId={currentDoctorId}
                 currentDoctorName={currentDoctorName}
+            />
+
+            <AppointmentDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={handleCloseDetailModal}
+                appointment={selectedAppointment}
             />
         </div>
     );
