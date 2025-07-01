@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client'; // Ensure this client is imported for patient search
-import { createAppointment } from '@/app/agenda/actions'; // Import the server action
+import { createAppointment } from '@/app/(app)/agenda/actions'; // Import the server action
 
 interface Patient {
     id: string;

@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { createBlockedTime } from '@/app/agenda/actions'; // Server action
+import { createBlockedTime } from '@/app/(app)/agenda/actions'; // Server action
 
 interface BlockTimeModalProps {
     isOpen: boolean;

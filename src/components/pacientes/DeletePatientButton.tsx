@@ -15,7 +15,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { deletePatient } from '@/app/pacientes/actions'; // Server action
+import { deletePatient } from '@/app/(app)/pacientes/actions'; // Server action
 
 interface DeletePatientButtonProps {
     patientId: string;

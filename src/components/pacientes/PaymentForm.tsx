@@ -18,7 +18,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '@/components/ui/dialog';
-import { addPayment } from '@/app/pacientes/actions';
+import { addPayment } from '@/app/(app)/pacientes/actions';
 
 // Zod schema for validation
 const paymentSchema = z.object({

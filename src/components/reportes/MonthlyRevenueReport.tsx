@@ -6,7 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { getMonthlyRevenue } from "@/app/reportes/actions";
+import { getMonthlyRevenue } from "@/app/(app)/reportes/actions";
 
 interface MonthlyRevenueData {
     month: string;

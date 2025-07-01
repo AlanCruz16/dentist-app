@@ -17,7 +17,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '@/components/ui/dialog';
-import { addPayment } from '@/app/pacientes/actions';
+import { addPayment } from '@/app/(app)/pacientes/actions';
 import { Combobox } from '@/components/ui/combobox'; // Assuming a combobox component exists
 
 // Zod schema for validation

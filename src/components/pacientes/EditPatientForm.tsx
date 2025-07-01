@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { updatePatient, type PatientFormData } from '@/app/pacientes/actions'; // Adjusted path
+import { updatePatient, type PatientFormData } from '@/app/(app)/pacientes/actions'; // Adjusted path
 
 // Define a type for the patient data passed as props (full detail)
 interface PatientDetail {
