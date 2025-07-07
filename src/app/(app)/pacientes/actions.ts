@@ -13,6 +13,7 @@ export interface PatientFormData {
     email?: string | null;
     address?: string | null;
     orthodontic_stage_notes?: string | null;
+    allow_whatsapp_reminders?: boolean;
 }
 
 export interface PaymentFormData {
@@ -123,6 +124,7 @@ export async function addPatient(formData: PatientFormData) {
         email: formData.email?.toLowerCase() || null, // Store email in lowercase
         address: formData.address || null,
         orthodontic_stage_notes: formData.orthodontic_stage_notes || null,
+        allow_whatsapp_reminders: formData.allow_whatsapp_reminders,
         // clinic_id will be null for now as per plan
     };
 
@@ -181,6 +183,7 @@ export async function updatePatient(id: string, formData: PatientFormData) {
         email: formData.email?.toLowerCase() || null,
         address: formData.address || null,
         orthodontic_stage_notes: formData.orthodontic_stage_notes || null,
+        allow_whatsapp_reminders: formData.allow_whatsapp_reminders,
         updated_at: new Date().toISOString(), // Explicitly set updated_at, though DB trigger also does it
     };
 

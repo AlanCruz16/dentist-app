@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea'; // For multi-line notes
@@ -21,6 +22,7 @@ export default function AddPatientPage() {
     const [email, setEmail] = useState('');
     const [address, setAddress] = useState('');
     const [orthodonticStageNotes, setOrthodonticStageNotes] = useState('');
+    const [allowWhatsappReminders, setAllowWhatsappReminders] = useState(true);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export default function AddPatientPage() {
                 email: email || null,
                 address: address || null,
                 orthodontic_stage_notes: orthodonticStageNotes || null,
+                allow_whatsapp_reminders: allowWhatsappReminders,
             };
 
             const result = await addPatient(patientFormData);
@@ -117,6 +120,13 @@ export default function AddPatientPage() {
                                 <Label htmlFor="email">Correo Electrónico</Label>
                                 <Input id="email" type="email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} disabled={loading} />
                             </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="allowWhatsappReminders" checked={allowWhatsappReminders} onCheckedChange={(checked) => setAllowWhatsappReminders(checked as boolean)} disabled={loading} />
+                            <label htmlFor="allowWhatsappReminders" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Permitir recordatorios por WhatsApp
+                            </label>
                         </div>
 
                         <div className="space-y-2">

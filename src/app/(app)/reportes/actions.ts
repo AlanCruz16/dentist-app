@@ -17,6 +17,22 @@ export async function getNewPatientsPerMonth() {
     return data;
 }
 
+export async function getServiceBreakdownData() {
+    noStore();
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+        .from('payments')
+        .select('service_description, amount_paid');
+
+    if (error) {
+        console.error('Error fetching service breakdown data:', error);
+        return [];
+    }
+
+    return data;
+}
+
 export async function getMonthlyRevenue() {
     noStore();
     const supabase = await createSupabaseServerClient();

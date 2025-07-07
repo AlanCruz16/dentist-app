@@ -119,7 +119,7 @@ export default async function PatientDetailsPage(props: PatientDetailsPageProps)
                         </p>
                     </div>
                     <hr />
-                    <PaymentsList payments={typedPatient.payments || []} />
+                    <PaymentsList payments={typedPatient.payments || []} patient={typedPatient} />
                     <hr />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-500 pt-2">
                         <div><strong>ID Paciente:</strong> {typedPatient.id}</div>

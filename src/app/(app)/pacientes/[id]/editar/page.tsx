@@ -20,6 +20,7 @@ interface PatientDetail {
     email: string | null;
     address: string | null;
     orthodontic_stage_notes: string | null;
+    allow_whatsapp_reminders: boolean | null;
     // created_at and updated_at might also be fetched if needed by the form/page
 }
 
@@ -30,7 +31,7 @@ export default async function EditPatientPage(props: EditPatientPageProps) { // 
 
     const { data: patient, error } = await supabase
         .from('patients')
-        .select('id, first_name, last_name, date_of_birth, phone_number, email, address, orthodontic_stage_notes')
+        .select('id, first_name, last_name, date_of_birth, phone_number, email, address, orthodontic_stage_notes, allow_whatsapp_reminders')
         .eq('id', patientId)
         .is('deleted_at', null)
         .single();

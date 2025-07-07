@@ -1,3 +1,10 @@
+'use client';
+
+import React, { useState } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { Button } from '@/components/ui/button';
+import Receipt from './Receipt'; // The component we just created
 import {
     Table,
     TableBody,
@@ -17,11 +24,56 @@ interface Payment {
     notes: string | null;
 }
 
-interface PaymentsListProps {
-    payments: Payment[];
+// Patient data is needed for the receipt
+interface Patient {
+    first_name: string | null;
+    last_name: string | null;
 }
 
-export function PaymentsList({ payments }: PaymentsListProps) {
+interface PaymentsListProps {
+    payments: Payment[];
+    patient: Patient; // Pass patient data down
+}
+
+export function PaymentsList({ payments, patient }: PaymentsListProps) {
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleGenerateReceipt = async (payment: Payment) => {
+        setSelectedPayment(payment);
+        setIsGenerating(true);
+
+        // We need a slight delay to allow React to render the hidden receipt component
+        setTimeout(async () => {
+            const receiptElement = document.getElementById('receipt-to-print');
+            if (!receiptElement) {
+                console.error('Receipt element not found!');
+                setIsGenerating(false);
+                setSelectedPayment(null);
+                return;
+            }
+
+            const canvas = await html2canvas(receiptElement, { scale: 2 }); // Higher scale for better quality
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'pt',
+                format: 'letter', // Standard letter size
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`recibo-${patient.first_name}-${payment.id.substring(0, 6)}.pdf`);
+
+            // Clean up after generation
+            setIsGenerating(false);
+            setSelectedPayment(null);
+        }, 100);
+    };
+
     if (!payments || payments.length === 0) {
         return <p className="text-center text-gray-500 mt-4">No hay pagos registrados para este paciente.</p>;
     }
@@ -62,6 +114,7 @@ export function PaymentsList({ payments }: PaymentsListProps) {
                         <TableHead>Método</TableHead>
                         <TableHead>Servicio/Descripción</TableHead>
                         <TableHead>Notas</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -72,10 +125,25 @@ export function PaymentsList({ payments }: PaymentsListProps) {
                             <TableCell>{translatePaymentMethod(payment.payment_method)}</TableCell>
                             <TableCell>{payment.service_description || 'N/A'}</TableCell>
                             <TableCell>{payment.notes || 'N/A'}</TableCell>
+                            <TableCell className="text-right">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleGenerateReceipt(payment)}
+                                    disabled={isGenerating}
+                                >
+                                    {isGenerating && selectedPayment?.id === payment.id ? 'Generando...' : 'Recibo'}
+                                </Button>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+
+            {/* Hidden container for the receipt component to be rendered for PDF generation */}
+            <div className="absolute -left-[9999px] top-auto">
+                <Receipt payment={selectedPayment} patient={patient} />
+            </div>
         </div>
     );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +20,7 @@ interface PatientDetail {
     email: string | null;
     address: string | null;
     orthodontic_stage_notes: string | null;
+    allow_whatsapp_reminders: boolean | null;
     // created_at and updated_at are not directly editable but good to have if needed
 }
 
@@ -37,6 +39,7 @@ export default function EditPatientForm({ patient }: EditPatientFormProps) {
     const [email, setEmail] = useState(patient.email || '');
     const [address, setAddress] = useState(patient.address || '');
     const [orthodonticStageNotes, setOrthodonticStageNotes] = useState(patient.orthodontic_stage_notes || '');
+    const [allowWhatsappReminders, setAllowWhatsappReminders] = useState(patient.allow_whatsapp_reminders ?? true);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -51,6 +54,7 @@ export default function EditPatientForm({ patient }: EditPatientFormProps) {
         setEmail(patient.email || '');
         setAddress(patient.address || '');
         setOrthodonticStageNotes(patient.orthodontic_stage_notes || '');
+        setAllowWhatsappReminders(patient.allow_whatsapp_reminders ?? true);
     }, [patient]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -73,6 +77,7 @@ export default function EditPatientForm({ patient }: EditPatientFormProps) {
             email: email || null,
             address: address || null,
             orthodontic_stage_notes: orthodonticStageNotes || null,
+            allow_whatsapp_reminders: allowWhatsappReminders,
         };
 
         try {
@@ -127,6 +132,13 @@ export default function EditPatientForm({ patient }: EditPatientFormProps) {
                             <Label htmlFor="email">Correo Electrónico</Label>
                             <Input id="email" type="email" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} disabled={loading} />
                         </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="allowWhatsappReminders" checked={allowWhatsappReminders} onCheckedChange={(checked) => setAllowWhatsappReminders(checked as boolean)} disabled={loading} />
+                        <label htmlFor="allowWhatsappReminders" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Permitir recordatorios por WhatsApp
+                        </label>
                     </div>
 
                     <div className="space-y-2">

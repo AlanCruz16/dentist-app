@@ -13,6 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { createClient } from '@/lib/supabase/client'; // Ensure this client is imported for patient search
 import { createAppointment } from '@/app/(app)/agenda/actions'; // Import the server action
 
@@ -44,7 +52,10 @@ export default function AppointmentFormModal({
 }: AppointmentFormModalProps) {
     const [patientId, setPatientId] = useState('');
     const [serviceDescription, setServiceDescription] = useState('');
+    const [duration, setDuration] = useState(60); // Default duration 60 minutes
     const [notes, setNotes] = useState('');
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [recurrenceRule, setRecurrenceRule] = useState('weekly'); // e.g., 'weekly', 'monthly'
     const [isLoading, setIsLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -57,7 +68,10 @@ export default function AppointmentFormModal({
             // Reset form fields when modal closes
             setPatientId('');
             setServiceDescription('');
+            setDuration(60); // Reset duration
             setNotes('');
+            setIsRecurring(false);
+            setRecurrenceRule('weekly');
             setSearchTerm('');
             setSelectedPatientName('');
             setPatients([]);
@@ -100,11 +114,21 @@ export default function AppointmentFormModal({
         setIsLoading(true);
 
         const [hours, minutes] = selectedTime.split(':').map(Number);
-        const startTime = new Date(selectedDate);
-        startTime.setHours(hours, minutes, 0, 0);
+        const localDate = new Date(selectedDate);
+        localDate.setHours(hours, minutes, 0, 0);
 
-        const endTime = new Date(startTime);
-        endTime.setHours(startTime.getHours() + 1); // Default 1-hour duration
+        // Manually construct ISO string with timezone offset
+        const timezoneOffset = localDate.getTimezoneOffset();
+        const offsetHours = Math.abs(Math.floor(timezoneOffset / 60)).toString().padStart(2, '0');
+        const offsetMinutes = (Math.abs(timezoneOffset) % 60).toString().padStart(2, '0');
+        const offsetSign = timezoneOffset <= 0 ? '+' : '-';
+        const timezoneString = `${offsetSign}${offsetHours}:${offsetMinutes}`;
+
+        const startTime = new Date(localDate.getTime() - (timezoneOffset * 60000));
+        const startTimeISO = startTime.toISOString().slice(0, -1) + timezoneString;
+
+        const endTime = new Date(localDate.getTime() + duration * 60000);
+        const endTimeISO = new Date(endTime.getTime() - (timezoneOffset * 60000)).toISOString().slice(0, -1) + timezoneString;
 
         if (!currentDoctorId) {
             alert('Error: No se pudo identificar al doctor. Por favor, inicie sesión nuevamente.');
@@ -115,10 +139,12 @@ export default function AppointmentFormModal({
         const appointmentData = {
             patient_id: patientId,
             doctor_id: currentDoctorId,
-            start_time: startTime.toISOString(),
-            end_time: endTime.toISOString(),
+            start_time: startTimeISO,
+            end_time: endTimeISO,
             service_description: serviceDescription,
             notes: notes,
+            is_recurring: isRecurring,
+            recurrence_rule: isRecurring ? recurrenceRule : null,
         };
 
         const result = await createAppointment(appointmentData);
@@ -205,6 +231,53 @@ export default function AppointmentFormModal({
                             required
                             className="bg-input text-foreground"
                         />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="duration">Duración (minutos)</Label>
+                        <Input
+                            id="duration"
+                            type="number"
+                            value={duration}
+                            onChange={(e) => setDuration(Number(e.target.value))}
+                            required
+                            min="15"
+                            step="15"
+                            className="bg-input text-foreground"
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="is-recurring"
+                                checked={isRecurring}
+                                onCheckedChange={(checked: boolean | 'indeterminate') =>
+                                    setIsRecurring(checked === true)
+                                }
+                            />
+                            <Label htmlFor="is-recurring" className="font-medium">
+                                Repetir Cita
+                            </Label>
+                        </div>
+                        {isRecurring && (
+                            <div>
+                                <Label htmlFor="recurrence-rule">Frecuencia</Label>
+                                <Select
+                                    value={recurrenceRule}
+                                    onValueChange={setRecurrenceRule}
+                                >
+                                    <SelectTrigger id="recurrence-rule">
+                                        <SelectValue placeholder="Seleccione frecuencia" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="weekly">Semanal</SelectItem>
+                                        <SelectItem value="bi-weekly">Quincenal</SelectItem>
+                                        <SelectItem value="monthly">Mensual</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     <div>
