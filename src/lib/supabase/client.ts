@@ -47,7 +47,7 @@ export async function getAppointmentsForWeek(startDate: string, endDate: string)
             start_time,
             end_time,
             reason,
-            doctor:profiles (id, full_name) -- Assuming blocked times can be linked to a doctor
+            doctor:profiles (id, full_name)
         `)
         .gte('start_time', startDate)
         .lt('start_time', endDate); // Or use a range overlap condition if end_time is relevant for fetching
@@ -56,10 +56,10 @@ export async function getAppointmentsForWeek(startDate: string, endDate: string)
         console.error('Error fetching blocked times:', blockedTimesError.message);
     }
 
-    const transformedBlockedTimes = (blockedTimesData || []).map((bt: any) => {
-        const singleDoctor = bt.doctor && Array.isArray(bt.doctor) ? (bt.doctor[0] || null) : bt.doctor;
-        return { ...bt, type: 'blocked', doctor: singleDoctor };
-    });
+    const transformedBlockedTimes = (blockedTimesData || []).map((bt: any) => ({
+        ...bt,
+        type: 'blocked',
+    }));
 
     // Combine and return or return separately
     // For now, returning them separately to be handled in the component

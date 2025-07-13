@@ -52,7 +52,13 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ isOpen,
                     </div>
                     <div>
                         <h3 className="font-semibold">Fecha y Hora:</h3>
-                        <p>{new Date(appointment.start_time).toLocaleString('es-ES')}</p>
+                        <p>
+                            {new Date(appointment.start_time).toLocaleDateString('es-ES')}
+                            {' de '}
+                            {new Date(appointment.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                            {' a '}
+                            {new Date(appointment.end_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                     </div>
                     <div>
                         <h3 className="font-semibold">Servicio:</h3>

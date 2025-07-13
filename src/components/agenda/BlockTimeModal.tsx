@@ -11,6 +11,13 @@ import {
     DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { createBlockedTime } from '@/app/(app)/agenda/actions'; // Server action
@@ -31,7 +38,13 @@ export default function BlockTimeModal({
     currentDoctorName,
 }: BlockTimeModalProps) {
     const getFormattedDate = (date: Date) => date.toISOString().split('T')[0];
-    const getFormattedTime = (date: Date) => `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    const getFormattedTime = (date: Date) => {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = date.getMinutes();
+        // Round down to the nearest 30-minute interval
+        const roundedMinutes = minutes < 30 ? '00' : '30';
+        return `${hours}:${roundedMinutes}`;
+    };
 
     const [startDate, setStartDate] = useState('');
     const [startTime, setStartTime] = useState('');
@@ -39,6 +52,13 @@ export default function BlockTimeModal({
     const [endTime, setEndTime] = useState('');
     const [reason, setReason] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const timeSlots = [];
+    for (let i = 8; i < 19; i++) {
+        timeSlots.push(`${String(i).padStart(2, '0')}:00`);
+        timeSlots.push(`${String(i).padStart(2, '0')}:30`);
+    }
+    timeSlots.push('19:00');
 
     useEffect(() => {
         if (isOpen) {
@@ -133,14 +153,18 @@ export default function BlockTimeModal({
                         </div>
                         <div>
                             <Label htmlFor="start-time">Hora Inicio</Label>
-                            <Input
-                                id="start-time"
-                                type="time"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                required
-                                className="bg-input text-foreground"
-                            />
+                            <Select value={startTime} onValueChange={setStartTime}>
+                                <SelectTrigger id="start-time" className="bg-input text-foreground">
+                                    <SelectValue placeholder="Seleccione hora" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(time => (
+                                        <SelectItem key={`start-${time}`} value={time}>
+                                            {time}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -157,14 +181,18 @@ export default function BlockTimeModal({
                         </div>
                         <div>
                             <Label htmlFor="end-time">Hora Fin</Label>
-                            <Input
-                                id="end-time"
-                                type="time"
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                                required
-                                className="bg-input text-foreground"
-                            />
+                            <Select value={endTime} onValueChange={setEndTime}>
+                                <SelectTrigger id="end-time" className="bg-input text-foreground">
+                                    <SelectValue placeholder="Seleccione hora" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {timeSlots.map(time => (
+                                        <SelectItem key={`end-${time}`} value={time}>
+                                            {time}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div>

@@ -62,13 +62,29 @@ export default function AgendaPage() {
     const [selectedSlotTime, setSelectedSlotTime] = useState<string | null>(null);
     const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
     const [currentDoctorName, setCurrentDoctorName] = useState<string | null>(null);
+    const [weekDates, setWeekDates] = useState<Date[]>([]);
 
     const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-    const timeSlots = Array.from({ length: 11 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`); // 08:00 to 18:00
+    const timeSlots = [];
+    for (let i = 8; i < 19; i++) {
+        timeSlots.push(`${String(i).padStart(2, '0')}:00`);
+        timeSlots.push(`${String(i).padStart(2, '0')}:30`);
+    }
+    timeSlots.push('19:00');
+
 
     const fetchCalendarEvents = useCallback(async () => {
         const startOfWeek = getStartOfWeek(currentDate);
         startOfWeek.setHours(0, 0, 0, 0);
+
+        // Update week dates
+        const dates = [];
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + i);
+            dates.push(date);
+        }
+        setWeekDates(dates);
 
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 7);
@@ -183,27 +199,55 @@ export default function AgendaPage() {
         const startOfWeek = getStartOfWeek(currentDate);
         const slotDate = new Date(startOfWeek);
         slotDate.setDate(startOfWeek.getDate() + dayIndex);
-        const [hour] = time.split(':').map(Number);
+        const [hour, minute] = time.split(':').map(Number);
 
         const slotAppointments = appointments.filter(app => {
             const appStartDate = new Date(app.start_time);
             return appStartDate.getFullYear() === slotDate.getFullYear() &&
                 appStartDate.getMonth() === slotDate.getMonth() &&
                 appStartDate.getDate() === slotDate.getDate() &&
-                appStartDate.getHours() === hour;
+                appStartDate.getHours() === hour &&
+                appStartDate.getMinutes() === minute;
         });
 
         const slotBlockedTimes = blockedTimes.filter(bt => {
             const btStartDate = new Date(bt.start_time);
-            // Assuming blocked times are for the whole hour slot if they start within it
-            // More precise overlap logic might be needed if blocked times can be partial hours
-            return btStartDate.getFullYear() === slotDate.getFullYear() &&
+            // A blocked time is for the current doctor if the doctor object exists and the ID matches.
+            const isForCurrentDoctor = bt.doctor && bt.doctor.id === currentDoctorId;
+
+            const isSameDay = btStartDate.getFullYear() === slotDate.getFullYear() &&
                 btStartDate.getMonth() === slotDate.getMonth() &&
-                btStartDate.getDate() === slotDate.getDate() &&
-                btStartDate.getHours() === hour;
+                btStartDate.getDate() === slotDate.getDate();
+            const isSameTime = btStartDate.getHours() === hour && btStartDate.getMinutes() === minute;
+
+            return isSameDay && isSameTime && isForCurrentDoctor;
         });
 
         return [...slotAppointments, ...slotBlockedTimes].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    };
+
+    const isSlotOccupied = (dayIndex: number, time: string): boolean => {
+        const startOfWeek = getStartOfWeek(currentDate);
+        const slotDateTime = new Date(startOfWeek);
+        slotDateTime.setDate(startOfWeek.getDate() + dayIndex);
+        const [hour, minute] = time.split(':').map(Number);
+        slotDateTime.setHours(hour, minute, 0, 0);
+
+        const occupiedByAppointment = appointments.some(app => {
+            const appStart = new Date(app.start_time);
+            const appEnd = new Date(app.end_time);
+            return slotDateTime >= appStart && slotDateTime < appEnd;
+        });
+
+        const occupiedByBlock = blockedTimes.some(bt => {
+            const btStart = new Date(bt.start_time);
+            const btEnd = new Date(bt.end_time);
+            // A slot is occupied by a block if the doctor object exists and the ID matches.
+            const isForCurrentDoctor = bt.doctor && bt.doctor.id === currentDoctorId;
+            return slotDateTime >= btStart && slotDateTime < btEnd && isForCurrentDoctor;
+        });
+
+        return occupiedByAppointment || occupiedByBlock;
     };
 
     const formatWeekDisplay = (date: Date): string => {
@@ -237,50 +281,80 @@ export default function AgendaPage() {
             {isLoading ? (
                 <div className="text-center py-12">Cargando agenda...</div>
             ) : (
-                <div className="grid grid-cols-8 border border-border bg-card rounded-lg shadow-sm">
+                <div className="grid grid-cols-8 border border-border bg-card rounded-lg shadow-sm relative">
                     <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10">Hora</div>
-                    {daysOfWeek.map((day) => (
+                    {daysOfWeek.map((day, index) => (
                         <div
                             key={day}
                             className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10"
                         >
                             {day}
+                            {weekDates[index] && (
+                                <span className="block font-normal text-sm">
+                                    {weekDates[index].toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                                </span>
+                            )}
                         </div>
                     ))}
 
                     {timeSlots.map((time) => (
                         <React.Fragment key={time}>
-                            <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center h-32 flex items-center justify-center">
+                            <div className={`p-3 border-r border-b border-border font-semibold bg-muted text-center h-12 flex items-center justify-center text-sm ${!time.endsWith(':00') && 'text-muted-foreground'}`}>
                                 {time}
                             </div>
                             {daysOfWeek.map((day, dayIndex) => {
-                                const slotEvents = getEventsForSlot(dayIndex, time);
-                                const isBlocked = slotEvents.some(event => event.type === 'blocked');
+                                const eventsForThisSlot = getEventsForSlot(dayIndex, time);
+                                const isOccupied = isSlotOccupied(dayIndex, time);
+                                const isBlockedByEvent = eventsForThisSlot.some(e => e.type === 'blocked');
+
+                                // A slot is truly blocked if it's occupied by a block event for the current doctor.
+                                const isClickable = !isOccupied && !isBlockedByEvent;
 
                                 return (
                                     <div
                                         key={`${day}-${time}`}
-                                        className={`p-2 border-r border-b border-border h-32 overflow-y-auto text-sm ${isBlocked ? 'bg-destructive/20 cursor-not-allowed' : 'hover:bg-accent cursor-pointer'
-                                            }`}
+                                        className={`relative p-1 border-r border-b border-border h-12 text-xs ${isBlockedByEvent ? 'bg-destructive/20 cursor-not-allowed' : ''
+                                            } ${isClickable ? 'hover:bg-accent cursor-pointer' : ''}`}
                                         onClick={() => {
-                                            if (!isBlocked && slotEvents.filter(e => e.type === 'appointment').length === 0) {
+                                            if (isClickable) {
                                                 handleOpenAppointmentModal(dayIndex, time);
                                             }
                                         }}
                                     >
-                                        {slotEvents.map(event => {
+                                        {eventsForThisSlot.map(event => {
+                                            const start = new Date(event.start_time);
+                                            const end = new Date(event.end_time);
+                                            const durationInMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+                                            const height = (durationInMinutes / 30) * 48; // 48px per 30-min slot (h-12)
+
                                             if (event.type === 'appointment') {
                                                 return (
-                                                    <div key={event.id} className="bg-primary/40 p-2 rounded-lg mb-1 shadow-sm cursor-pointer" onClick={() => handleOpenDetailModal(event)}>
-                                                        <p className="font-semibold text-primary-foreground">{event.patient?.first_name} {event.patient?.last_name}</p>
-                                                        <p className="text-primary-foreground/80">{event.service_description || 'Cita'}</p>
+                                                    <div
+                                                        key={event.id}
+                                                        className="absolute z-20 w-[calc(100%-0.5rem)] p-2 rounded-lg shadow-md cursor-pointer flex flex-col items-center justify-center text-center box-border"
+                                                        style={{
+                                                            height: `${height}px`,
+                                                            top: `0px`, // Position relative to the start slot
+                                                            backgroundColor: 'rgba(52, 211, 153, 0.8)'
+                                                        }}
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenDetailModal(event); }}
+                                                    >
+                                                        <p className="font-bold text-white">{event.patient?.first_name} {event.patient?.last_name}</p>
+                                                        <p className="text-white/90">{event.service_description || 'Cita'}</p>
                                                     </div>
                                                 );
                                             } else if (event.type === 'blocked') {
                                                 return (
-                                                    <div key={event.id} className="bg-destructive/80 p-2 rounded-lg mb-1 shadow-sm text-center">
-                                                        <p className="font-semibold text-destructive-foreground">BLOQUEADO</p>
-                                                        {event.reason && <p className="text-xs text-destructive-foreground/80">{event.reason}</p>}
+                                                    <div
+                                                        key={event.id}
+                                                        className="absolute z-20 w-[calc(100%-0.5rem)] bg-destructive/80 p-2 rounded-lg shadow-md text-center box-border"
+                                                        style={{
+                                                            height: `${height}px`,
+                                                            top: `0px` // Position relative to the start slot
+                                                        }}
+                                                    >
+                                                        <p className="font-bold text-destructive-foreground">BLOQUEADO</p>
+                                                        {event.reason && <p className="text-xs text-destructive-foreground/90">{event.reason}</p>}
                                                     </div>
                                                 );
                                             }
