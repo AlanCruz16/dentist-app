@@ -15,19 +15,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get the total revenue per month
-CREATE OR REPLACE FUNCTION get_monthly_revenue()
-RETURNS TABLE(month TEXT, total_revenue NUMERIC) AS $$
+-- Function to get the total revenue for a specific month
+CREATE OR REPLACE FUNCTION get_monthly_revenue(p_year INT, p_month INT)
+RETURNS NUMERIC AS $$
+DECLARE
+  total_revenue NUMERIC;
 BEGIN
-  RETURN QUERY
   SELECT
-    TO_CHAR(payment_date, 'YYYY-MM') AS month,
-    SUM(amount_paid) AS total_revenue
+    COALESCE(SUM(amount_paid), 0) INTO total_revenue
   FROM
     payments
-  GROUP BY
-    TO_CHAR(payment_date, 'YYYY-MM')
-  ORDER BY
-    month;
+  WHERE
+    EXTRACT(YEAR FROM payment_date) = p_year AND
+    EXTRACT(MONTH FROM payment_date) = p_month;
+
+  RETURN total_revenue;
 END;
 $$ LANGUAGE plpgsql;
