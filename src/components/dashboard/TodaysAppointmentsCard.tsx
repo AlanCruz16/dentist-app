@@ -4,17 +4,9 @@ import { Badge } from "@/components/ui/badge";
 interface Appointment {
     id: string;
     start_time: string;
-    end_time: string;
-    service_description: string | null;
-    status: string | null;
     patient: {
-        id: string;
         first_name: string | null;
         last_name: string | null;
-    } | null;
-    doctor: {
-        id: string;
-        full_name: string | null;
     } | null;
 }
 
@@ -26,27 +18,27 @@ export default function TodaysAppointmentsCard({ appointments }: TodaysAppointme
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Citas de Hoy</CardTitle>
+                <CardTitle>Próximas Citas en la Semana</CardTitle>
             </CardHeader>
             <CardContent>
                 {appointments.length > 0 ? (
-                    <ul className="space-y-4">
+                    <div className="space-y-4">
                         {appointments.map((appointment) => (
-                            <li key={appointment.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted">
-                                <div>
-                                    <p className="font-semibold">{appointment.patient?.first_name} {appointment.patient?.last_name}</p>
-                                    <p className="text-sm text-muted-foreground">{appointment.service_description}</p>
-                                    <p className="text-sm text-muted-foreground">Dr. {appointment.doctor?.full_name}</p>
+                            <div key={appointment.id} className="flex items-center">
+                                <div className="ml-4 space-y-1">
+                                    <p className="text-sm font-medium leading-none">
+                                        {appointment.patient?.first_name} {appointment.patient?.last_name}
+                                    </p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-mono text-sm">{new Date(appointment.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                                    <Badge variant={appointment.status === 'scheduled' ? 'default' : 'secondary'}>{appointment.status}</Badge>
+                                <div className="ml-auto font-medium text-right">
+                                    <p>{new Date(appointment.start_time).toLocaleDateString([], { weekday: 'long' })}</p>
+                                    <p>{new Date(appointment.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>
-                            </li>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                 ) : (
-                    <p className="text-muted-foreground">No hay citas programadas para hoy.</p>
+                    <p className="text-sm text-muted-foreground">No hay próximas citas en la semana.</p>
                 )}
             </CardContent>
         </Card>
