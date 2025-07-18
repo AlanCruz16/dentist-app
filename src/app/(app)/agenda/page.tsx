@@ -335,7 +335,7 @@ export default function AgendaPage() {
                                                         style={{
                                                             height: `${height}px`,
                                                             top: `0px`, // Position relative to the start slot
-                                                            backgroundColor: 'rgba(52, 211, 153, 0.8)'
+                                                            backgroundColor: 'oklch(0.7 0.2 50)'
                                                         }}
                                                         onClick={(e) => { e.stopPropagation(); handleOpenDetailModal(event); }}
                                                     >

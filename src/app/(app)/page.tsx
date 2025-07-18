@@ -42,6 +42,9 @@ export default async function DashboardPage() {
           <TodaysAppointmentsCard appointments={upcomingAppointments} />
         </div>
       </div>
+      <div>
+        <p className='text-secondary'>example text</p>
+      </div>
     </div>
   );
 }
