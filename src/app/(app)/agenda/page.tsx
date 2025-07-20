@@ -282,11 +282,11 @@ export default function AgendaPage() {
                 <div className="text-center py-12">Cargando agenda...</div>
             ) : (
                 <div className="grid grid-cols-8 border border-border bg-card rounded-lg shadow-sm relative">
-                    <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10">Hora</div>
+                    <div className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-30">Hora</div>
                     {daysOfWeek.map((day, index) => (
                         <div
                             key={day}
-                            className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-10"
+                            className="p-3 border-r border-b border-border font-semibold bg-muted text-center sticky top-0 z-30"
                         >
                             {day}
                             {weekDates[index] && (
@@ -339,8 +339,14 @@ export default function AgendaPage() {
                                                         }}
                                                         onClick={(e) => { e.stopPropagation(); handleOpenDetailModal(event); }}
                                                     >
-                                                        <p className="font-bold text-white">{event.patient?.first_name} {event.patient?.last_name}</p>
-                                                        <p className="text-white/90">{event.service_description || 'Cita'}</p>
+                                                        <p className="font-bold text-white">
+                                                            {durationInMinutes <= 30
+                                                                ? event.patient?.first_name
+                                                                : `${event.patient?.first_name} ${event.patient?.last_name}`}
+                                                        </p>
+                                                        {durationInMinutes > 30 && (
+                                                            <p className="text-white/90">{event.service_description || 'Cita'}</p>
+                                                        )}
                                                     </div>
                                                 );
                                             } else if (event.type === 'blocked') {

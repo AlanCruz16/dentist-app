@@ -52,7 +52,7 @@ export default function AppointmentFormModal({
 }: AppointmentFormModalProps) {
     const [patientId, setPatientId] = useState('');
     const [serviceDescription, setServiceDescription] = useState('');
-    const [duration, setDuration] = useState(60); // Default duration 60 minutes
+    const [duration, setDuration] = useState(30); // Default duration 30 minutes
     const [notes, setNotes] = useState('');
     const [isRecurring, setIsRecurring] = useState(false);
     const [recurrenceRule, setRecurrenceRule] = useState('weekly'); // e.g., 'weekly', 'monthly'
@@ -68,7 +68,7 @@ export default function AppointmentFormModal({
             // Reset form fields when modal closes
             setPatientId('');
             setServiceDescription('');
-            setDuration(60); // Reset duration
+            setDuration(30); // Reset duration
             setNotes('');
             setIsRecurring(false);
             setRecurrenceRule('weekly');
@@ -241,8 +241,8 @@ export default function AppointmentFormModal({
                             value={duration}
                             onChange={(e) => setDuration(Number(e.target.value))}
                             required
-                            min="15"
-                            step="15"
+                            min="30"
+                            step="30"
                             className="bg-input text-foreground"
                         />
                     </div>

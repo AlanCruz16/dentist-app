@@ -12,11 +12,12 @@ interface Appointment {
 
 interface TodaysAppointmentsCardProps {
     appointments: Appointment[];
+    className?: string;
 }
 
-export default function TodaysAppointmentsCard({ appointments }: TodaysAppointmentsCardProps) {
+export default function TodaysAppointmentsCard({ appointments, className }: TodaysAppointmentsCardProps) {
     return (
-        <Card>
+        <Card className={className}>
             <CardHeader>
                 <CardTitle>Próximas Citas en la Semana</CardTitle>
             </CardHeader>
