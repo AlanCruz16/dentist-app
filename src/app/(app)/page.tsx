@@ -43,7 +43,7 @@ export default async function DashboardPage() {
         </div>
       </div>
       <div>
-        <p className='text-secondary'>example text</p>
+        <p className='text-primary'>example text</p>
       </div>
     </div>
   );

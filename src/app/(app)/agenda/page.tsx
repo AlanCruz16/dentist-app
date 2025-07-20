@@ -331,11 +331,11 @@ export default function AgendaPage() {
                                                 return (
                                                     <div
                                                         key={event.id}
-                                                        className="absolute z-20 w-[calc(100%-0.5rem)] p-2 rounded-lg shadow-md cursor-pointer flex flex-col items-center justify-center text-center box-border"
+                                                        className="absolute z-20 w-[calc(100%-0.5rem)] p-2 rounded-lg shadow-md cursor-pointer flex flex-col items-center justify-center text-center box-border bg-primary"
                                                         style={{
                                                             height: `${height}px`,
                                                             top: `0px`, // Position relative to the start slot
-                                                            backgroundColor: 'oklch(0.7 0.2 50)'
+                                                            //backgroundColor: 'oklch(0.7 0.2 50)'
                                                         }}
                                                         onClick={(e) => { e.stopPropagation(); handleOpenDetailModal(event); }}
                                                     >
